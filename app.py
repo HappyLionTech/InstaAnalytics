@@ -1,6 +1,11 @@
 from flask import Flask, request, jsonify
 from instaloader import Instaloader, Profile
 from itertools import islice
+import os
+
+# Directory and file path for the session
+SESSION_DIR = "/tmp"  # Change to a persistent location if needed
+SESSION_FILE = os.path.join(SESSION_DIR, f"session-{os.getenv('INSTAGRAM_USERNAME')}")
 
 app = Flask(__name__)
 
@@ -17,12 +22,30 @@ def calculate_engagement_and_averages():
     try:
         data = request.json
         profile_username = data.get("username")
-    
         post_limit = data.get("post_limit", 25)
 
-        loader = Instaloader(download_pictures=False, download_videos=False, download_video_thumbnails=False)
-        profile = Profile.from_username(loader.context, profile_username)
+        # Instagram credentials
+        ig_username = os.getenv("INSTAGRAM_USERNAME")
+        ig_password = os.getenv("INSTAGRAM_PASSWORD")
 
+        if not ig_username or not ig_password:
+            return jsonify({"error": "Instagram credentials not set"}), 500
+
+        # Ensure session directory exists
+        os.makedirs(SESSION_DIR, exist_ok=True)
+
+        # Initialize Instaloader
+        loader = Instaloader(download_pictures=False, download_videos=False, download_video_thumbnails=False)
+
+        # Load or create session
+        try:
+            loader.load_session_from_file(SESSION_FILE)
+        except FileNotFoundError:
+            loader.login(ig_username, ig_password)
+            loader.save_session_to_file(SESSION_FILE)
+
+        # Fetch profile and calculate metrics
+        profile = Profile.from_username(loader.context, profile_username)
         num_followers = profile.followers
         formatted_followers = format_count(num_followers)
 
