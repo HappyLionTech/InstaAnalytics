@@ -17,6 +17,7 @@ def calculate_engagement_and_averages():
     try:
         data = request.json
         profile_username = data.get("username")
+    
         post_limit = data.get("post_limit", 25)
 
         loader = Instaloader(download_pictures=False, download_videos=False, download_video_thumbnails=False)
