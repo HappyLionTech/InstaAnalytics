@@ -36,7 +36,12 @@ def calculate_engagement_and_averages():
 
         # Initialize Instaloader
         loader = Instaloader(download_pictures=False, download_videos=False, download_video_thumbnails=False)
-
+        
+        # Set a custom User-Agent to mimic a real browser
+        loader.context._session.headers.update({
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
+        })
+        
         # Load or create session
         try:
             loader.load_session_from_file(SESSION_FILE)
